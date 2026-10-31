@@ -6,3 +6,4 @@ include:
   - temporal-server/compose.yaml
   - temporal-ui/compose.yaml
   - ollama/compose.yaml
+  - azurite/compose.yaml

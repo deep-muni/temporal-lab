@@ -1,0 +1,18 @@
+services:
+  azurite:
+    image: ${AZURITE_IMAGE}
+    container_name: temporal-lab-azurite
+    restart: unless-stopped
+    command: azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --location /data --skipApiVersionCheck
+    volumes:
+      - azurite-data:/data
+    ports:
+      - "${BIND_HOST}:${AZURITE_BLOB_HOST_PORT}:10000"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z 127.0.0.1 10000"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  azurite-data:
