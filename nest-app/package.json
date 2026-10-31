@@ -1,0 +1,60 @@
+{
+  "name": "nest-app",
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@10.34.6",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "start": "dotenvx run -f .env.local -f .env --ignore=MISSING_ENV_FILE -- nest start",
+    "start:dev": "dotenvx run -f .env.local -f .env --ignore=MISSING_ENV_FILE -- nest start --watch",
+    "start:debug": "dotenvx run -f .env.local -f .env --ignore=MISSING_ENV_FILE -- nest start --debug --watch",
+    "start:prod": "node --enable-source-maps dist/main.mjs",
+    "dotenvx": "dotenvx",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism",
+    "test:e2e": "vitest run --config ./vitest.config.e2e.ts"
+  },
+  "dependencies": {
+    "@dotenvx/dotenvx": "^2.38.2",
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/core": "^12.0.1",
+    "@nestjs/platform-express": "^12.0.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@nestjs/cli": "^12.0.0",
+    "@nestjs/schematics": "^12.0.0",
+    "@nestjs/testing": "^12.0.1",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "@types/supertest": "^7.0.0",
+    "@vitest/coverage-v8": "^4.1.2",
+    "eslint": "^10.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.13.0",
+    "prettier": "^3.4.2",
+    "source-map-support": "^0.5.21",
+    "supertest": "^7.0.0",
+    "tsdown": "^0.23.4",
+    "typescript": "^6.0.2",
+    "typescript-eslint": "^8.72.1",
+    "vite": "^8.0.0",
+    "vitest": "^4.1.2"
+  }
+}
