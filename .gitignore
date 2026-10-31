@@ -1,0 +1,16 @@
+# Local config and secrets — only *.env.example files are committed
+.env
+**/secrets/
+
+# Node / NestJS
+node_modules/
+dist/
+coverage/
+
+# Go
+/bin/
+
+# OS / editor
+.DS_Store
+.idea/
+*.log
