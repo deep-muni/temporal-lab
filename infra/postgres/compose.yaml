@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE}
+    container_name: temporal-lab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password # password read from the secret file
+    secrets:
+      - db_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+      - "${BIND_HOST}:${POSTGRES_HOST_PORT}:5432" # for DBeaver
+
+volumes:
+  postgres-data:
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
