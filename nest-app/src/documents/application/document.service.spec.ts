@@ -8,11 +8,29 @@ const NOTES = new TextEncoder().encode('Temporal keeps work durable.');
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-function setUp() {
-  const documents = new InMemoryDocumentRepository(() => UPLOADED_AT);
+function setUp(now: () => Date = () => UPLOADED_AT) {
+  const documents = new InMemoryDocumentRepository(now);
   const files = new InMemoryDocumentFileStoreAdapter();
   const service = new DocumentService(documents, files);
   return { documents, files, service };
+}
+
+function oneSecondApart(): () => Date {
+  let tick = 0;
+  return () => new Date(UPLOADED_AT.getTime() + 1_000 * tick++);
+}
+
+async function uploadTextFiles(
+  service: DocumentService,
+  names: string[],
+): Promise<void> {
+  for (const name of names) {
+    await service.upload({ originalName: name, content: NOTES });
+  }
+}
+
+function textFileNames(count: number): string[] {
+  return Array.from({ length: count }, (_, index) => `note-${index + 1}.txt`);
 }
 
 describe('uploading a document', () => {
@@ -110,5 +128,37 @@ describe('uploading a document', () => {
       service.upload({ originalName: 'notes.txt', content: NOTES }),
     ).rejects.toThrow('database unavailable');
     expect(files.all()).toEqual([]);
+  });
+});
+
+describe('listing documents', () => {
+  it('lists nothing when no document has been uploaded', async () => {
+    const { service } = setUp();
+
+    await expect(service.list()).resolves.toEqual([]);
+  });
+
+  it('lists the most recently uploaded document first', async () => {
+    const { service } = setUp(oneSecondApart());
+    await uploadTextFiles(service, ['first.txt', 'second.txt', 'third.txt']);
+
+    const documents = await service.list();
+
+    expect(documents.map((document) => document.name)).toEqual([
+      'third.txt',
+      'second.txt',
+      'first.txt',
+    ]);
+  });
+
+  it('lists only the newest 100 documents', async () => {
+    const { service } = setUp(oneSecondApart());
+    await uploadTextFiles(service, textFileNames(101));
+
+    const documents = await service.list();
+
+    expect(documents).toHaveLength(100);
+    expect(documents.at(0)?.name).toBe('note-101.txt');
+    expect(documents.at(-1)?.name).toBe('note-2.txt');
   });
 });

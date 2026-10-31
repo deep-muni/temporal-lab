@@ -19,4 +19,12 @@ export class PrismaDocumentRepository implements DocumentRepositoryPort {
     const row = await this.txHost.tx.document.create({ data: document });
     return toDocument(row);
   }
+
+  async findNewest(limit: number): Promise<Document[]> {
+    const rows = await this.txHost.tx.document.findMany({
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
+    return rows.map(toDocument);
+  }
 }

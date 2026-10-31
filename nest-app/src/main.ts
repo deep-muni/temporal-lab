@@ -1,9 +1,12 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@src/app.module';
+import { HttpConfig } from '@src/lib/http/http.config';
 
 async function bootstrap() {
+  const http = HttpConfig.fromEnv(process.env);
   const app = await NestFactory.create(AppModule);
+  app.enableCors({ origin: http.corsOrigins });
   app.enableShutdownHooks();
-  await app.listen(process.env.PORT ?? 3000, process.env.HOST ?? '127.0.0.1');
+  await app.listen(http.port, http.host);
 }
 void bootstrap();

@@ -17,6 +17,8 @@ import {
   type DocumentRepositoryPort,
 } from '@src/documents/domain/ports/document-repository.port';
 
+export const DOCUMENT_LIST_LIMIT = 100;
+
 @Injectable()
 export class DocumentService {
   private readonly logger = new Logger(DocumentService.name);
@@ -38,6 +40,10 @@ export class DocumentService {
       content: upload.content,
     });
     return this.recordOrDiscardFile({ id, name: upload.name, blobName });
+  }
+
+  list(): Promise<Document[]> {
+    return this.documents.findNewest(DOCUMENT_LIST_LIMIT);
   }
 
   private async recordOrDiscardFile(document: NewDocument): Promise<Document> {

@@ -32,6 +32,13 @@ export class InMemoryDocumentRepository implements DocumentRepositoryPort {
     return Promise.resolve(document);
   }
 
+  findNewest(limit: number): Promise<Document[]> {
+    const newestFirst = this.all().sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+    return Promise.resolve(newestFirst.slice(0, limit));
+  }
+
   all(): Document[] {
     return [...this.documents.values()];
   }

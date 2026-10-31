@@ -8,6 +8,16 @@ export interface DocumentResponseDto {
   uploadedAt: string;
 }
 
+export interface DocumentListResponseDto {
+  documents: DocumentResponseDto[];
+}
+
+export function toDocumentListResponse(
+  documents: Document[],
+): DocumentListResponseDto {
+  return { documents: documents.map(toDocumentResponse) };
+}
+
 export function toDocumentResponse(document: Document): DocumentResponseDto {
   return {
     id: document.id,

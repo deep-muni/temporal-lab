@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Inject,
@@ -12,7 +13,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { DocumentService } from '@src/documents/application/document.service';
 import type { IncomingDocumentFile } from '@src/documents/domain/models/document-upload';
 import {
+  toDocumentListResponse,
   toDocumentResponse,
+  type DocumentListResponseDto,
   type DocumentResponseDto,
 } from './dto/document-response.dto';
 import { DocumentsHttpExceptionFilter } from './documents.http-exception.filter';
@@ -34,6 +37,11 @@ export class DocumentsController {
   ): Promise<DocumentResponseDto> {
     const document = await this.documents.upload(toIncomingFile(file));
     return toDocumentResponse(document);
+  }
+
+  @Get()
+  async list(): Promise<DocumentListResponseDto> {
+    return toDocumentListResponse(await this.documents.list());
   }
 }
 
