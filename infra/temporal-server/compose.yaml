@@ -1,0 +1,81 @@
+services:
+  # Step 1 (runs once, then exits): create the databases and tables.
+  schema-setup:
+    image: ${TEMPORAL_ADMINTOOLS_IMAGE}
+    container_name: temporal-lab-schema-setup
+    secrets:
+      - db_password
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -eu
+        export SQL_PASSWORD="$$(cat /run/secrets/db_password)"
+        COMMON="--plugin postgres12 --endpoint postgres --port 5432 --user ${POSTGRES_USER}"
+        for DB in temporal temporal_visibility; do
+          temporal-sql-tool $$COMMON --database $$DB create-database || true
+          temporal-sql-tool $$COMMON --database $$DB setup-schema -v 0.0 || true
+        done
+        temporal-sql-tool $$COMMON --database temporal update-schema \
+          --schema-dir /etc/temporal/schema/postgresql/v12/temporal/versioned
+        temporal-sql-tool $$COMMON --database temporal_visibility update-schema \
+          --schema-dir /etc/temporal/schema/postgresql/v12/visibility/versioned
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Step 2: the Temporal server.
+  server:
+    image: ${TEMPORAL_IMAGE}
+    container_name: temporal-lab-server
+    restart: unless-stopped
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_SEEDS: postgres
+      POSTGRES_USER: ${POSTGRES_USER}
+      BIND_ON_IP: 0.0.0.0
+    secrets:
+      - db_password
+    # The image wants the password in an env var, so read it from the secret file first.
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        export POSTGRES_PWD="$$(cat /run/secrets/db_password)"
+        exec /etc/temporal/entrypoint.sh
+    # The server refuses to start without a dynamic config file; "{}" = defaults.
+    configs:
+      - source: dynamicconfig
+        target: /etc/temporal/config/dynamicconfig/docker.yaml
+    ports:
+      - "${BIND_HOST}:${TEMPORAL_HOST_PORT}:7233"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "7233"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+    depends_on:
+      schema-setup:
+        condition: service_completed_successfully
+
+  # Step 3 (runs once, then exits): create our namespace.
+  namespace-setup:
+    image: ${TEMPORAL_ADMINTOOLS_IMAGE}
+    container_name: temporal-lab-namespace-setup
+    environment:
+      TEMPORAL_ADDRESS: server:7233
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        temporal operator namespace describe --namespace ${TEMPORAL_NAMESPACE} >/dev/null 2>&1 ||
+          temporal operator namespace create --namespace ${TEMPORAL_NAMESPACE}
+    depends_on:
+      server:
+        condition: service_healthy
+
+configs:
+  dynamicconfig:
+    content: "{}"
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
