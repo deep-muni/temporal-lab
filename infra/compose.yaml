@@ -1,0 +1,7 @@
+# Runs all temporal-lab components together. Each one has its own folder.
+name: temporal-lab
+
+include:
+  - postgres/compose.yaml
+  - temporal-server/compose.yaml
+  - temporal-ui/compose.yaml
