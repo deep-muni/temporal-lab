@@ -1,5 +1,7 @@
 dist/
 .nest-dev/
 coverage/
+src/generated/
+prisma/migrations/
 pnpm-lock.yaml
 .env*

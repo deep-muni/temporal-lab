@@ -6,7 +6,15 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  { ignores: ['dist/', '.nest-dev/', 'coverage/', 'eslint.config.mjs'] },
+  {
+    ignores: [
+      'dist/',
+      '.nest-dev/',
+      'coverage/',
+      'src/generated/',
+      'eslint.config.mjs',
+    ],
+  },
   eslint.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   {

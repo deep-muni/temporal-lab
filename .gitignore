@@ -10,6 +10,7 @@ node_modules/
 dist/
 .nest-dev/
 coverage/
+nest-app/src/generated/
 *.tsbuildinfo
 
 # Next.js
@@ -23,3 +24,6 @@ next-env.d.ts
 .DS_Store
 .idea/
 *.log
+
+# Local planning docs
+docs/
