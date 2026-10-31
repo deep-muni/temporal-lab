@@ -1,6 +1,6 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { Global, Module } from '@nestjs/common';
-import { AzureStorageConfig } from './azure-storage.config.js';
+import { AzureStorageConfig } from './azure-storage.config';
 
 @Global()
 @Module({

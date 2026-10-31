@@ -1,4 +1,4 @@
-import { AzureStorageConfig } from './azure-storage.config.js';
+import { AzureStorageConfig } from './azure-storage.config';
 
 const AZURITE_CONNECTION_STRING =
   'DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=a2V5;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;';

@@ -1,4 +1,4 @@
-import { DocumentsConfig } from './documents.config.js';
+import { DocumentsConfig } from './documents.config';
 
 describe('documents configuration', () => {
   it('keeps uploaded files in the documents container by default', () => {

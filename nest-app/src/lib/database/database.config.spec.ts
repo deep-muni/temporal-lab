@@ -1,4 +1,4 @@
-import { DatabaseConfig } from './database.config.js';
+import { DatabaseConfig } from './database.config';
 
 const LAB_DATABASE_URL =
   'postgresql://temporal:s3cret-pass@localhost:15432/lab?schema=public';

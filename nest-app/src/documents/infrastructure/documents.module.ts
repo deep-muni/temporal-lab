@@ -1,8 +1,8 @@
 import { BlobServiceClient } from '@azure/storage-blob';
 import { Module } from '@nestjs/common';
-import { AzureBlobDocumentFileStoreAdapter } from '../adapters/driven/storage/azure-blob-document-file-store.adapter.js';
-import { DOCUMENT_FILE_STORE } from '../domain/ports/document-file-store.port.js';
-import { DocumentsConfig } from './documents.config.js';
+import { AzureBlobDocumentFileStoreAdapter } from '@src/documents/adapters/driven/storage/azure-blob-document-file-store.adapter';
+import { DOCUMENT_FILE_STORE } from '@src/documents/domain/ports/document-file-store.port';
+import { DocumentsConfig } from './documents.config';
 
 @Module({
   providers: [

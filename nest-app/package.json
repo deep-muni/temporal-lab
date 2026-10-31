@@ -5,7 +5,6 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
-  "type": "module",
   "packageManager": "pnpm@10.34.6",
   "engines": {
     "node": ">=24"
@@ -15,7 +14,7 @@
     "start": "dotenvx run -f .env.local -f .env --ignore=MISSING_ENV_FILE -- nest start",
     "start:dev": "dotenvx run -f .env.local -f .env --ignore=MISSING_ENV_FILE -- nest start --watch",
     "start:debug": "dotenvx run -f .env.local -f .env --ignore=MISSING_ENV_FILE -- nest start --debug --watch",
-    "start:prod": "node --enable-source-maps dist/main.mjs",
+    "start:prod": "node --enable-source-maps dist/main.cjs",
     "dotenvx": "dotenvx",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",

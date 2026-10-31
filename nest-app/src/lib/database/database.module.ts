@@ -2,8 +2,8 @@ import { ClsPluginTransactional } from '@nestjs-cls/transactional';
 import { TransactionalAdapterPrisma } from '@nestjs-cls/transactional-adapter-prisma';
 import { Module } from '@nestjs/common';
 import { ClsModule } from 'nestjs-cls';
-import { PrismaModule } from './prisma.module.js';
-import { PrismaService } from './prisma.service.js';
+import { PrismaModule } from './prisma.module';
+import { PrismaService } from './prisma.service';
 
 const TRANSACTION_TIMEOUT_MS = 10_000;
 const TRANSACTION_MAX_WAIT_MS = 5_000;

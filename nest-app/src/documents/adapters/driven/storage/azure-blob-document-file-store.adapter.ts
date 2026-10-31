@@ -1,10 +1,10 @@
 import { RestError, type ContainerClient } from '@azure/storage-blob';
 import type { OnModuleInit } from '@nestjs/common';
-import { DocumentFileNotFoundError } from '../../../domain/errors/document-file.errors.js';
+import { DocumentFileNotFoundError } from '@src/documents/domain/errors/document-file.errors';
 import type {
   DocumentFile,
   DocumentFileStore,
-} from '../../../domain/ports/document-file-store.port.js';
+} from '@src/documents/domain/ports/document-file-store.port';
 
 const HTTP_NOT_FOUND = 404;
 

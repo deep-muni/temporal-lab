@@ -5,8 +5,8 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { PrismaClient } from '../../generated/prisma/client.js';
-import { DatabaseConfig } from './database.config.js';
+import { PrismaClient } from '@src/generated/prisma/client';
+import { DatabaseConfig } from './database.config';
 
 @Injectable()
 export class PrismaService
