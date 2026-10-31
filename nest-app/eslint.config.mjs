@@ -26,5 +26,17 @@ export default defineConfig(
       },
     },
   },
+  {
+    rules: {
+      'max-depth': ['error', 3],
+      complexity: ['error', 5],
+      'no-param-reassign': 'error',
+      'no-console': 'warn',
+      eqeqeq: 'error',
+      curly: 'error',
+      'no-var': 'error',
+      'prefer-const': 'error',
+    },
+  },
   eslintConfigPrettier,
 );
