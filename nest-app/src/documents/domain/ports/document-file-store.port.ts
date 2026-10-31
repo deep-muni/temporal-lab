@@ -1,4 +1,4 @@
-export const DOCUMENT_FILE_STORE = Symbol('DocumentFileStore');
+export const DOCUMENT_FILE_STORE_PORT = Symbol('DOCUMENT_FILE_STORE_PORT');
 
 export interface DocumentFile {
   name: string;
@@ -6,7 +6,7 @@ export interface DocumentFile {
   content: Uint8Array;
 }
 
-export interface DocumentFileStore {
+export interface DocumentFileStorePort {
   save(file: DocumentFile): Promise<void>;
   read(name: string): Promise<Uint8Array>;
   delete(name: string): Promise<void>;
