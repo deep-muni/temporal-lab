@@ -5,3 +5,4 @@ include:
   - postgres/compose.yaml
   - temporal-server/compose.yaml
   - temporal-ui/compose.yaml
+  - ollama/compose.yaml
