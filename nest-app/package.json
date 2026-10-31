@@ -34,6 +34,7 @@
     "db:migrate:prod": "prisma migrate deploy"
   },
   "dependencies": {
+    "@azure/storage-blob": "12.34.0",
     "@dotenvx/dotenvx": "^2.38.2",
     "@nestjs-cls/transactional": "4.0.2",
     "@nestjs-cls/transactional-adapter-prisma": "2.0.2",
