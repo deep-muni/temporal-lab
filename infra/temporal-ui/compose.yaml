@@ -1,0 +1,13 @@
+services:
+  ui:
+    image: ${TEMPORAL_UI_IMAGE}
+    container_name: temporal-lab-ui
+    restart: unless-stopped
+    environment:
+      TEMPORAL_ADDRESS: server:7233
+      TEMPORAL_DEFAULT_NAMESPACE: ${TEMPORAL_DEFAULT_NAMESPACE}
+    ports:
+      - "${BIND_HOST}:${TEMPORAL_UI_HOST_PORT}:8080"
+    depends_on:
+      server:
+        condition: service_healthy
