@@ -1,11 +1,16 @@
-# Local config and secrets — only *.env.example files are committed
+# Local config and secrets
 .env
 **/secrets/
+!nest-app/.env
+.env.local
+.env.keys
 
 # Node / NestJS
 node_modules/
 dist/
+.nest-dev/
 coverage/
+*.tsbuildinfo
 
 # Go
 /bin/
