@@ -21,15 +21,14 @@ type TableView = 'loading' | 'error' | 'empty' | 'rows';
 
 interface DocumentsTableProps {
   onUpload: () => void;
-  canUpload: boolean;
 }
 
-export function DocumentsTable({ onUpload, canUpload }: DocumentsTableProps) {
+export function DocumentsTable({ onUpload }: DocumentsTableProps) {
   const documents = useGetAllDocuments();
   const views: Record<TableView, () => ReactNode> = {
     loading: () => <LoadingTable />,
     error: () => <LoadFailure onRetry={() => void documents.refetch()} />,
-    empty: () => <EmptyLibrary onUpload={onUpload} canUpload={canUpload} />,
+    empty: () => <EmptyLibrary onUpload={onUpload} />,
     rows: () => <DocumentRows documents={documents.data ?? []} />,
   };
   return views[viewOf(documents.data, documents.isError)]();
@@ -136,7 +135,7 @@ function LoadFailure({ onRetry }: { onRetry: () => void }) {
   );
 }
 
-function EmptyLibrary({ onUpload, canUpload }: DocumentsTableProps) {
+function EmptyLibrary({ onUpload }: DocumentsTableProps) {
   return (
     <EmptyState.Root data-testid="documents-empty-state">
       <EmptyState.Content>
@@ -144,11 +143,7 @@ function EmptyLibrary({ onUpload, canUpload }: DocumentsTableProps) {
         <EmptyState.Description>
           {DOCUMENTS_COPY.empty.description}
         </EmptyState.Description>
-        <Button
-          onClick={onUpload}
-          disabled={!canUpload}
-          data-testid="documents-empty-upload-button"
-        >
+        <Button onClick={onUpload} data-testid="documents-empty-upload-button">
           {DOCUMENTS_COPY.upload}
         </Button>
       </EmptyState.Content>

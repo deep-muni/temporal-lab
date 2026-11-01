@@ -32,6 +32,6 @@ export function renderWithRequests(
   requests: DocumentsRequests,
 ): RenderResult & { user: UserEvent } {
   return Object.assign(render(ui, { wrapper: createTestWrapper(requests) }), {
-    user: userEvent.setup(),
+    user: userEvent.setup({ applyAccept: false }),
   });
 }

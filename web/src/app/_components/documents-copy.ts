@@ -29,3 +29,17 @@ export const DOCUMENTS_COPY = {
   },
   retry: 'Try again',
 } as const;
+
+export const UPLOAD_DIALOG_COPY = {
+  title: 'Upload a document',
+  description:
+    'It appears in the table straight away and is read in the background.',
+  dropzoneHint: 'Drop a .txt or .md file up to 1 MB, or browse',
+  fileInputLabel: 'Document to upload',
+  browse: 'Browse',
+  upload: 'Upload',
+  sending: 'Uploading',
+  cancel: 'Cancel',
+  close: 'Close',
+  wrongFile: 'Only .txt and .md files up to 1 MB can be uploaded.',
+} as const;
