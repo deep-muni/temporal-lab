@@ -5,13 +5,8 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   output: 'standalone',
   agentRules: false,
-  turbopack: {
-    rules: {
-      '*.css': {
-        loaders: ['@tailwindcss/turbopack'],
-        as: '*.css',
-      },
-    },
+  experimental: {
+    optimizePackageImports: ['@chakra-ui/react'],
   },
 };
 

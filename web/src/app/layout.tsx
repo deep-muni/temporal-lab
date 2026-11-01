@@ -1,6 +1,7 @@
+import { EmotionRegistry } from '@/components/ui/emotion-registry';
+import { Provider } from '@/components/ui/provider';
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Document summaries',
@@ -8,8 +9,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-slate-50 text-slate-900 antialiased">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <EmotionRegistry>
+          <Provider>{children}</Provider>
+        </EmotionRegistry>
+      </body>
     </html>
   );
 }
