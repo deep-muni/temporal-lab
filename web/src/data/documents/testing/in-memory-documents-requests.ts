@@ -8,6 +8,7 @@ export class InMemoryDocumentsRequests implements DocumentsRequests {
   private nextListFailure: Error | undefined;
   private nextUploadRefusal: Error | undefined;
   private nextUploadGate: Promise<void> | undefined;
+  private nextDeleteRefusal: Error | undefined;
 
   seed(...documents: DocumentSummary[]): void {
     this.documents = [...documents, ...this.documents];
@@ -25,6 +26,10 @@ export class InMemoryDocumentsRequests implements DocumentsRequests {
 
   refuseNextUploadWith(error: Error): void {
     this.nextUploadRefusal = error;
+  }
+
+  refuseNextDeleteWith(error: Error): void {
+    this.nextDeleteRefusal = error;
   }
 
   holdNextUpload(): { complete(): void } {
@@ -54,6 +59,16 @@ export class InMemoryDocumentsRequests implements DocumentsRequests {
       throw refusal;
     }
     return this.accept(file);
+  }
+
+  deleteDocument(id: string): Promise<void> {
+    const refusal = this.nextDeleteRefusal;
+    this.nextDeleteRefusal = undefined;
+    if (refusal !== undefined) {
+      return Promise.reject(refusal);
+    }
+    this.documents = this.documents.filter((document) => document.id !== id);
+    return Promise.resolve();
   }
 
   private accept(file: File): DocumentSummary {

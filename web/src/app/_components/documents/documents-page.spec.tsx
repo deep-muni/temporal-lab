@@ -246,4 +246,76 @@ describe('the documents page', () => {
       );
     });
   });
+
+  describe('deleting a document', () => {
+    async function openDeleteDialogFor(requests: InMemoryDocumentsRequests) {
+      const rendered = renderWithRequests(<DocumentsPage />, requests);
+      await screen.findAllByTestId('documents-table-row');
+      await rendered.user.click(
+        screen.getByRole('button', { name: 'Delete guide.md' }),
+      );
+      await screen.findByTestId('delete-document-dialog');
+      return rendered;
+    }
+
+    const deleteDialogClosed = () =>
+      waitFor(() =>
+        expect(
+          screen.queryByTestId('delete-document-dialog'),
+        ).not.toBeInTheDocument(),
+      );
+
+    it('asks before deleting and names the document', async () => {
+      const requests = new InMemoryDocumentsRequests();
+      requests.seed(GUIDE, NOTES);
+
+      await openDeleteDialogFor(requests);
+
+      expect(screen.getByTestId('delete-document-dialog')).toHaveTextContent(
+        'guide.md and everything stored to search it will be removed.',
+      );
+    });
+
+    it('removes the document from the table once confirmed', async () => {
+      const requests = new InMemoryDocumentsRequests();
+      requests.seed(GUIDE, NOTES);
+      const { user } = await openDeleteDialogFor(requests);
+
+      await user.click(screen.getByTestId('delete-document-confirm-button'));
+
+      await deleteDialogClosed();
+      expect(textsOf('documents-table-name')).toEqual(['notes.txt']);
+    });
+
+    it('keeps the document when deleting is cancelled', async () => {
+      const requests = new InMemoryDocumentsRequests();
+      requests.seed(GUIDE, NOTES);
+      const { user } = await openDeleteDialogFor(requests);
+
+      await user.click(screen.getByTestId('delete-document-cancel-button'));
+
+      await deleteDialogClosed();
+      expect(textsOf('documents-table-name')).toEqual([
+        'guide.md',
+        'notes.txt',
+      ]);
+    });
+
+    it('explains a failed delete and keeps the document listed', async () => {
+      const requests = new InMemoryDocumentsRequests();
+      requests.seed(GUIDE, NOTES);
+      requests.refuseNextDeleteWith(nestJsError(500, 'Internal server error'));
+      const { user } = await openDeleteDialogFor(requests);
+
+      await user.click(screen.getByTestId('delete-document-confirm-button'));
+
+      expect(
+        await screen.findByTestId('delete-document-error-alert'),
+      ).toHaveTextContent('The document could not be deleted.');
+      expect(textsOf('documents-table-name')).toEqual([
+        'guide.md',
+        'notes.txt',
+      ]);
+    });
+  });
 });

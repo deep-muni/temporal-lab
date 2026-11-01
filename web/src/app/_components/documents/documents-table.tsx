@@ -13,15 +13,19 @@ import {
   Card,
   EmptyState,
   HStack,
+  IconButton,
   Skeleton,
   SkeletonCircle,
   Stack,
   Status,
   Table,
   Text,
+  VisuallyHidden,
 } from '@chakra-ui/react';
-import type { ReactNode } from 'react';
-import { LuInbox, LuRefreshCw, LuUpload } from 'react-icons/lu';
+import { useRef, useState, type ReactNode } from 'react';
+import { LuInbox, LuRefreshCw, LuTrash2, LuUpload } from 'react-icons/lu';
+import { DELETE_DIALOG_COPY } from './delete/delete-document-copy';
+import { DeleteDocumentDialog } from './delete/delete-document-dialog';
 import { DocumentFileIcon, fileKindOf } from './document-file-icon';
 import { DocumentStatusBadge } from './document-status-badge';
 import { DOCUMENTS_COPY } from './documents-copy';
@@ -30,24 +34,46 @@ const LOADING_ROWS = 3;
 
 type TableView = 'loading' | 'error' | 'empty' | 'rows';
 
+type RequestDelete = (document: DocumentSummary, trigger: HTMLElement) => void;
+
 interface DocumentsTableProps {
   onUpload: () => void;
 }
 
 export function DocumentsTable({ onUpload }: DocumentsTableProps) {
   const documents = useGetAllDocuments();
+  const [toDelete, setToDelete] = useState<DocumentSummary | null>(null);
+  const [isDeleteOpen, setDeleteOpen] = useState(false);
+  const deleteTrigger = useRef<HTMLElement | null>(null);
+  const requestDelete: RequestDelete = (document, trigger) => {
+    deleteTrigger.current = trigger;
+    setToDelete(document);
+    setDeleteOpen(true);
+  };
   const views: Record<TableView, () => ReactNode> = {
     loading: () => <LoadingTable />,
     error: () => <LoadFailure onRetry={() => void documents.refetch()} />,
     empty: () => <EmptyLibrary onUpload={onUpload} />,
-    rows: () => <DocumentRows documents={documents.data ?? []} />,
+    rows: () => (
+      <DocumentRows documents={documents.data ?? []} onDelete={requestDelete} />
+    ),
   };
   return (
     <Card.Root variant="outline" bg="bg" overflow="hidden">
       <LibraryHeader documents={documents.data} />
       {views[viewOf(documents.data, documents.isError)]()}
+      <DeleteDocumentDialog
+        open={isDeleteOpen}
+        document={toDelete}
+        onClose={() => setDeleteOpen(false)}
+        returnFocusTo={() => connectedOrNull(deleteTrigger.current)}
+      />
     </Card.Root>
   );
+}
+
+function connectedOrNull(element: HTMLElement | null): HTMLElement | null {
+  return element?.isConnected ? element : null;
 }
 
 function viewOf(
@@ -117,6 +143,9 @@ function DocumentsTableFrame({ children }: { children: ReactNode }) {
             <ColumnHeader width="40">
               {DOCUMENTS_COPY.columns.status}
             </ColumnHeader>
+            <ColumnHeader width="20">
+              <VisuallyHidden>{DOCUMENTS_COPY.columns.actions}</VisuallyHidden>
+            </ColumnHeader>
           </Table.Row>
         </Table.Header>
         <Table.Body>{children}</Table.Body>
@@ -147,17 +176,33 @@ function ColumnHeader({
   );
 }
 
-function DocumentRows({ documents }: { documents: DocumentSummary[] }) {
+function DocumentRows({
+  documents,
+  onDelete,
+}: {
+  documents: DocumentSummary[];
+  onDelete: RequestDelete;
+}) {
   return (
     <DocumentsTableFrame>
       {documents.map((document) => (
-        <DocumentRow key={document.id} document={document} />
+        <DocumentRow
+          key={document.id}
+          document={document}
+          onDelete={onDelete}
+        />
       ))}
     </DocumentsTableFrame>
   );
 }
 
-function DocumentRow({ document }: { document: DocumentSummary }) {
+function DocumentRow({
+  document,
+  onDelete,
+}: {
+  document: DocumentSummary;
+  onDelete: RequestDelete;
+}) {
   return (
     <Table.Row data-testid="documents-table-row">
       <Table.Cell px="5" py="3">
@@ -193,6 +238,18 @@ function DocumentRow({ document }: { document: DocumentSummary }) {
           data-testid="documents-table-status"
         />
       </Table.Cell>
+      <Table.Cell px="5" py="3" textAlign="end">
+        <IconButton
+          variant="ghost"
+          size="sm"
+          colorPalette="red"
+          aria-label={DELETE_DIALOG_COPY.action(document.name)}
+          onClick={(event) => onDelete(document, event.currentTarget)}
+          data-testid="documents-table-delete-button"
+        >
+          <LuTrash2 />
+        </IconButton>
+      </Table.Cell>
     </Table.Row>
   );
 }
@@ -219,6 +276,7 @@ function LoadingTable() {
             <Table.Cell px="5" py="3">
               <Skeleton height="6" width="24" rounded="full" />
             </Table.Cell>
+            <Table.Cell px="5" py="3" />
           </Table.Row>
         ))}
       </DocumentsTableFrame>

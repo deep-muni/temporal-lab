@@ -48,7 +48,12 @@ export const DOCUMENTS_COPY = {
     title: 'Library',
     live: 'Updating live',
   },
-  columns: { name: 'File', uploadedAt: 'Uploaded', status: 'Status' },
+  columns: {
+    name: 'File',
+    uploadedAt: 'Uploaded',
+    status: 'Status',
+    actions: 'Actions',
+  },
   fileTypes: { markdown: 'Markdown', plainText: 'Plain text' },
   loading: 'Loading documents',
   empty: {

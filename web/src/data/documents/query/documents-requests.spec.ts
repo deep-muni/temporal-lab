@@ -87,4 +87,25 @@ describe('talking to the documents API', () => {
       message: 'Only .txt and .md files can be uploaded',
     });
   });
+
+  it('deletes a document by its id', async () => {
+    server.respondTo('DELETE', `/documents/${OLDER.id}`, 204, undefined);
+
+    await expect(requests.deleteDocument(OLDER.id)).resolves.toBeUndefined();
+    expect(server.lastRequest()?.method).toBe('DELETE');
+  });
+
+  it('surfaces a delete of a document that no longer exists', async () => {
+    server.respondTo('DELETE', `/documents/${OLDER.id}`, 404, {
+      statusCode: 404,
+      message: `Document ${OLDER.id} was not found`,
+      error: 'Not Found',
+    });
+
+    const error = await requests
+      .deleteDocument(OLDER.id)
+      .catch((reason: unknown) => reason);
+
+    expect(nestJsErrorOf(error)?.status).toBe(404);
+  });
 });

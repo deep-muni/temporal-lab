@@ -14,6 +14,7 @@ export const UPLOAD_FIELD_NAME = 'file';
 export interface DocumentsRequests {
   getAllDocuments(): Promise<DocumentSummary[]>;
   uploadDocument(file: File): Promise<DocumentSummary>;
+  deleteDocument(id: string): Promise<void>;
 }
 
 export function createDocumentsRequests(
@@ -38,6 +39,9 @@ export function createDocumentsRequests(
         documentSummarySchema,
         UPLOAD_TIMEOUT_MS,
       );
+    },
+    deleteDocument: async (id) => {
+      await client.delete(`${documentsAPIRoute}/${encodeURIComponent(id)}`);
     },
   };
 }
