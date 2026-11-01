@@ -61,5 +61,6 @@ import { DocumentsConfigModule } from './documents-config.module';
     { provide: TEXT_CHUNKER_PORT, useClass: TextSplittingChunkerAdapter },
     { provide: EMBEDDING_PORT, useClass: EmbeddingServiceAdapter },
   ],
+  exports: [DocumentProcessingService],
 })
 export class DocumentsModule {}

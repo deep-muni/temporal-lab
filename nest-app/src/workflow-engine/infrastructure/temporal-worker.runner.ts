@@ -7,7 +7,9 @@ import { TemporalConfig } from './temporal.config';
 export class TemporalWorkerRunner {
   private readonly logger = new Logger(TemporalWorkerRunner.name);
 
-  constructor(@Inject(TemporalConfig) private readonly config: TemporalConfig) {}
+  constructor(
+    @Inject(TemporalConfig) private readonly config: TemporalConfig,
+  ) {}
 
   async run(registrations: WorkerRegistration[]): Promise<void> {
     const connection = await NativeConnection.connect({

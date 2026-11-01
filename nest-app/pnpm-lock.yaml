@@ -81,6 +81,9 @@ importers:
       '@nestjs/testing':
         specifier: ^12.0.1
         version: 12.3.2(@nestjs/common@12.3.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.3.2)(@nestjs/platform-express@12.3.2)
+      '@temporalio/testing':
+        specifier: 1.24.0
+        version: 1.24.0
       '@testcontainers/postgresql':
         specifier: 12.2.1
         version: 12.2.1
@@ -1197,6 +1200,10 @@ packages:
 
   '@temporalio/proto@1.24.0':
     resolution: {integrity: sha512-vhlhB9GpoyJx+78r3lDahHywpdri6LKx7kt7djLIw6XzHyb8FQTIi4lX8DSJBqKp3+HVfL1CLwiqO26KFRzg/g==}
+    engines: {node: '>= 20.3.0'}
+
+  '@temporalio/testing@1.24.0':
+    resolution: {integrity: sha512-XKCuvgb7smKR3oXy5nDgwYSFX/hmg9zTJ2rZQQsVwJzFkga1TbnWDiuT5YMU0INKjoLhnM6c5YA/uLKlp8sdfg==}
     engines: {node: '>= 20.3.0'}
 
   '@temporalio/worker@1.24.0':
@@ -5011,6 +5018,34 @@ snapshots:
     dependencies:
       long: 5.3.2
       protobufjs: 8.8.1
+
+  '@temporalio/testing@1.24.0':
+    dependencies:
+      '@temporalio/activity': 1.24.0
+      '@temporalio/client': 1.24.0
+      '@temporalio/common': 1.24.0
+      '@temporalio/core-bridge': 1.24.0
+      '@temporalio/proto': 1.24.0
+      '@temporalio/worker': 1.24.0
+      '@temporalio/workflow': 1.24.0
+    transitivePeerDependencies:
+      - '@minify-html/node'
+      - '@napi-rs/image'
+      - '@swc/css'
+      - '@swc/helpers'
+      - '@swc/html'
+      - clean-css
+      - cssnano
+      - csso
+      - esbuild
+      - html-minifier-terser
+      - imagemin
+      - lightningcss
+      - postcss
+      - sharp
+      - svgo
+      - uglify-js
+      - webpack-cli
 
   '@temporalio/worker@1.24.0':
     dependencies:

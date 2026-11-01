@@ -60,6 +60,7 @@
     "@nestjs/cli": "^12.0.0",
     "@nestjs/schematics": "^12.0.0",
     "@nestjs/testing": "^12.0.1",
+    "@temporalio/testing": "1.24.0",
     "@testcontainers/postgresql": "12.2.1",
     "@types/express": "^5.0.0",
     "@types/multer": "2.3.0",

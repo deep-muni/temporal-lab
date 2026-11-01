@@ -9,11 +9,16 @@ export function embeddingOf(text: string): number[] {
 
 export class InMemoryEmbeddingAdapter implements EmbeddingPort {
   private nextFailure: Error | undefined;
+  private everyCallFailure: Error | undefined;
   private beforeNextEmbed: (() => Promise<unknown>) | undefined;
   private dimensions = EMBEDDING_DIMENSIONS;
 
   failNextWith(error: Error): void {
     this.nextFailure = error;
+  }
+
+  failEveryCallWith(error: Error): void {
+    this.everyCallFailure = error;
   }
 
   runBeforeNextEmbed(action: () => Promise<unknown>): void {
@@ -28,7 +33,7 @@ export class InMemoryEmbeddingAdapter implements EmbeddingPort {
     const action = this.beforeNextEmbed;
     this.beforeNextEmbed = undefined;
     await action?.();
-    const failure = this.nextFailure;
+    const failure = this.nextFailure ?? this.everyCallFailure;
     this.nextFailure = undefined;
     if (failure) {
       throw failure;
