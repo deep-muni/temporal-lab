@@ -52,12 +52,16 @@ export class InMemoryDocumentRepository implements DocumentRepositoryPort {
     );
   }
 
-  finishProcessing(id: string, status: FinishedDocumentStatus): Promise<void> {
+  finishProcessing(
+    id: string,
+    status: FinishedDocumentStatus,
+  ): Promise<boolean> {
     const document = this.documents.get(id);
-    if (document?.status === DocumentStatus.Processing) {
-      this.changeStatus(document, status);
+    if (document?.status !== DocumentStatus.Processing) {
+      return Promise.resolve(false);
     }
-    return Promise.resolve();
+    this.changeStatus(document, status);
+    return Promise.resolve(true);
   }
 
   delete(id: string): Promise<Document | undefined> {

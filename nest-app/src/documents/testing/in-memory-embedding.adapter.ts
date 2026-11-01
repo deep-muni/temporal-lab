@@ -9,24 +9,30 @@ export function embeddingOf(text: string): number[] {
 
 export class InMemoryEmbeddingAdapter implements EmbeddingPort {
   private nextFailure: Error | undefined;
+  private beforeNextEmbed: (() => Promise<unknown>) | undefined;
   private dimensions = EMBEDDING_DIMENSIONS;
 
   failNextWith(error: Error): void {
     this.nextFailure = error;
   }
 
+  runBeforeNextEmbed(action: () => Promise<unknown>): void {
+    this.beforeNextEmbed = action;
+  }
+
   answerWithDimensions(dimensions: number): void {
     this.dimensions = dimensions;
   }
 
-  embed(texts: string[]): Promise<number[][]> {
+  async embed(texts: string[]): Promise<number[][]> {
+    const action = this.beforeNextEmbed;
+    this.beforeNextEmbed = undefined;
+    await action?.();
     const failure = this.nextFailure;
     this.nextFailure = undefined;
     if (failure) {
-      return Promise.reject(failure);
+      throw failure;
     }
-    return Promise.resolve(
-      texts.map((text) => embeddingOf(text).slice(0, this.dimensions)),
-    );
+    return texts.map((text) => embeddingOf(text).slice(0, this.dimensions));
   }
 }

@@ -72,8 +72,17 @@ export class DocumentProcessingService {
   }
 
   private async fail(document: Document, error: unknown): Promise<void> {
+    const failed = await this.documents.finishProcessing(
+      document.id,
+      DocumentStatus.Failed,
+    );
+    if (!failed) {
+      this.logger.warn(
+        `Document ${document.id} was deleted or finished while it was being read`,
+      );
+      return;
+    }
     this.logFailure(document, error);
-    await this.documents.finishProcessing(document.id, DocumentStatus.Failed);
   }
 
   private logFailure(document: Document, error: unknown): void {

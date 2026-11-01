@@ -48,11 +48,12 @@ export class PrismaDocumentRepository implements DocumentRepositoryPort {
   async finishProcessing(
     id: string,
     status: FinishedDocumentStatus,
-  ): Promise<void> {
-    await this.txHost.tx.document.updateMany({
+  ): Promise<boolean> {
+    const { count } = await this.txHost.tx.document.updateMany({
       where: { id, status: DocumentStatus.Processing },
       data: { status },
     });
+    return count > 0;
   }
 
   async delete(id: string): Promise<Document | undefined> {

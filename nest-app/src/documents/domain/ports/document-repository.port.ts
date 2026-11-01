@@ -10,6 +10,9 @@ export interface DocumentRepositoryPort {
   create(document: NewDocument): Promise<Document>;
   findNewest(limit: number): Promise<Document[]>;
   startProcessing(id: string): Promise<Document | undefined>;
-  finishProcessing(id: string, status: FinishedDocumentStatus): Promise<void>;
+  finishProcessing(
+    id: string,
+    status: FinishedDocumentStatus,
+  ): Promise<boolean>;
   delete(id: string): Promise<Document | undefined>;
 }

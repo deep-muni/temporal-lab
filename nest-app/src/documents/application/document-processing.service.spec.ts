@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { DocumentStatus } from '@src/documents/domain/models/document-status';
 import { InMemoryDocumentChunkRepository } from '@src/documents/testing/in-memory-document-chunk.repository';
 import { InMemoryDocumentFileStoreAdapter } from '@src/documents/testing/in-memory-document-file-store.adapter';
@@ -56,6 +57,10 @@ function statusOf(documents: InMemoryDocumentRepository): DocumentStatus {
   return documents.all().find((document) => document.id === DOCUMENT_ID)!
     .status;
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('indexing an uploaded document', () => {
   it('stores a short note as one embedded chunk and marks it ready', async () => {
@@ -178,6 +183,25 @@ describe('reading an uploaded document', () => {
     await context.service.process(DOCUMENT_ID);
 
     expect(statusOf(context.documents)).toBe(DocumentStatus.Ready);
+  });
+
+  it('reports a document deleted while it was being read as a warning, not an error', async () => {
+    const context = setUp();
+    await upload(context, 'notes.txt', NOTE);
+    context.embedder.runBeforeNextEmbed(() =>
+      context.documents.delete(DOCUMENT_ID),
+    );
+    context.embedder.failNextWith(new Error('document no longer exists'));
+    const errors = vi.spyOn(Logger.prototype, 'error');
+    const warnings = vi.spyOn(Logger.prototype, 'warn');
+
+    await context.service.process(DOCUMENT_ID);
+
+    expect(context.documents.all()).toEqual([]);
+    expect(errors).not.toHaveBeenCalled();
+    expect(warnings).toHaveBeenCalledWith(
+      `Document ${DOCUMENT_ID} was deleted or finished while it was being read`,
+    );
   });
 
   it('ignores a document that does not exist', async () => {
