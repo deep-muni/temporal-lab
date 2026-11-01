@@ -2,7 +2,10 @@ import type {
   Document,
   NewDocument,
 } from '@src/documents/domain/models/document';
-import { DocumentStatus } from '@src/documents/domain/models/document-status';
+import {
+  DocumentStatus,
+  type FinishedDocumentStatus,
+} from '@src/documents/domain/models/document-status';
 import type { DocumentRepositoryPort } from '@src/documents/domain/ports/document-repository.port';
 
 export class InMemoryDocumentRepository implements DocumentRepositoryPort {
@@ -39,7 +42,35 @@ export class InMemoryDocumentRepository implements DocumentRepositoryPort {
     return Promise.resolve(newestFirst.slice(0, limit));
   }
 
+  startProcessing(id: string): Promise<Document | undefined> {
+    const document = this.documents.get(id);
+    if (!document || isFinished(document.status)) {
+      return Promise.resolve(undefined);
+    }
+    return Promise.resolve(
+      this.changeStatus(document, DocumentStatus.Processing),
+    );
+  }
+
+  finishProcessing(id: string, status: FinishedDocumentStatus): Promise<void> {
+    const document = this.documents.get(id);
+    if (document?.status === DocumentStatus.Processing) {
+      this.changeStatus(document, status);
+    }
+    return Promise.resolve();
+  }
+
   all(): Document[] {
     return [...this.documents.values()];
   }
+
+  private changeStatus(document: Document, status: DocumentStatus): Document {
+    const changed = { ...document, status, updatedAt: this.now() };
+    this.documents.set(changed.id, changed);
+    return changed;
+  }
+}
+
+function isFinished(status: DocumentStatus): boolean {
+  return status === DocumentStatus.Ready || status === DocumentStatus.Failed;
 }

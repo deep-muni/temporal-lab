@@ -13,6 +13,10 @@ import {
   type DocumentFileStorePort,
 } from '@src/documents/domain/ports/document-file-store.port';
 import {
+  DOCUMENT_PROCESSOR_PORT,
+  type DocumentProcessorPort,
+} from '@src/documents/domain/ports/document-processor.port';
+import {
   DOCUMENT_REPOSITORY_PORT,
   type DocumentRepositoryPort,
 } from '@src/documents/domain/ports/document-repository.port';
@@ -28,6 +32,8 @@ export class DocumentService {
     private readonly documents: DocumentRepositoryPort,
     @Inject(DOCUMENT_FILE_STORE_PORT)
     private readonly files: DocumentFileStorePort,
+    @Inject(DOCUMENT_PROCESSOR_PORT)
+    private readonly processor: DocumentProcessorPort,
   ) {}
 
   async upload(file: IncomingDocumentFile | undefined): Promise<Document> {
@@ -39,7 +45,13 @@ export class DocumentService {
       contentType: upload.contentType,
       content: upload.content,
     });
-    return this.recordOrDiscardFile({ id, name: upload.name, blobName });
+    const document = await this.recordOrDiscardFile({
+      id,
+      name: upload.name,
+      blobName,
+    });
+    await this.processor.schedule(document.id);
+    return document;
   }
 
   list(): Promise<Document[]> {

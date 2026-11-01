@@ -7,3 +7,6 @@ export const DocumentStatus = {
 
 export type DocumentStatus =
   (typeof DocumentStatus)[keyof typeof DocumentStatus];
+
+export type FinishedDocumentStatus =
+  typeof DocumentStatus.Ready | typeof DocumentStatus.Failed;

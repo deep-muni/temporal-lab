@@ -1,6 +1,7 @@
 import { InvalidDocumentUploadError } from '@src/documents/domain/errors/documents.errors';
 import { InMemoryDocumentFileStoreAdapter } from '@src/documents/testing/in-memory-document-file-store.adapter';
 import { InMemoryDocumentRepository } from '@src/documents/testing/in-memory-document.repository';
+import { RecordingDocumentProcessorAdapter } from '@src/documents/testing/recording-document-processor.adapter';
 import { DocumentService } from './document.service';
 
 const UPLOADED_AT = new Date('2026-10-31T12:00:00.000Z');
@@ -11,8 +12,9 @@ const UUID =
 function setUp(now: () => Date = () => UPLOADED_AT) {
   const documents = new InMemoryDocumentRepository(now);
   const files = new InMemoryDocumentFileStoreAdapter();
-  const service = new DocumentService(documents, files);
-  return { documents, files, service };
+  const processor = new RecordingDocumentProcessorAdapter();
+  const service = new DocumentService(documents, files, processor);
+  return { documents, files, processor, service };
 }
 
 function oneSecondApart(): () => Date {
@@ -59,6 +61,17 @@ describe('uploading a document', () => {
         content: NOTES,
       },
     ]);
+  });
+
+  it('sends an uploaded document off to be read', async () => {
+    const { processor, service } = setUp();
+
+    const document = await service.upload({
+      originalName: 'notes.txt',
+      content: NOTES,
+    });
+
+    expect(processor.scheduled).toEqual([document.id]);
   });
 
   it('accepts a markdown file and stores it as markdown', async () => {
@@ -121,13 +134,14 @@ describe('uploading a document', () => {
   });
 
   it('removes the stored file when the document cannot be recorded', async () => {
-    const { documents, files, service } = setUp();
+    const { documents, files, processor, service } = setUp();
     documents.failNextCreateWith(new Error('database unavailable'));
 
     await expect(
       service.upload({ originalName: 'notes.txt', content: NOTES }),
     ).rejects.toThrow('database unavailable');
     expect(files.all()).toEqual([]);
+    expect(processor.scheduled).toEqual([]);
   });
 });
 

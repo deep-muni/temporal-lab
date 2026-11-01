@@ -11,3 +11,7 @@ export class DocumentFileNotFoundError extends DocumentsDomainError {
     super(`Document file ${fileName} was not found`);
   }
 }
+
+export class UnreadableDocumentError extends DocumentsDomainError {
+  override readonly name = 'UnreadableDocumentError';
+}
