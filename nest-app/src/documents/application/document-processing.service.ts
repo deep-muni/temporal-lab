@@ -57,7 +57,7 @@ export class DocumentProcessingService {
     try {
       await this.index(document);
     } catch (error) {
-      await this.failUnreadable(document, error);
+      await this.fail(document, error);
     }
   }
 
@@ -71,14 +71,20 @@ export class DocumentProcessingService {
     });
   }
 
-  private async failUnreadable(
-    document: Document,
-    error: unknown,
-  ): Promise<void> {
-    if (!(error instanceof DocumentsDomainError)) {
-      throw error;
-    }
-    this.logger.warn(`Document ${document.id} failed: ${error.message}`);
+  private async fail(document: Document, error: unknown): Promise<void> {
+    this.logFailure(document, error);
     await this.documents.finishProcessing(document.id, DocumentStatus.Failed);
+  }
+
+  private logFailure(document: Document, error: unknown): void {
+    const message = `Document ${document.id} failed`;
+    if (error instanceof DocumentsDomainError) {
+      this.logger.warn(`${message}: ${error.message}`);
+      return;
+    }
+    this.logger.error(
+      message,
+      error instanceof Error ? error.stack : String(error),
+    );
   }
 }

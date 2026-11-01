@@ -96,27 +96,25 @@ describe('indexing an uploaded document', () => {
     ]);
   });
 
-  it('leaves the document processing with no chunks when embedding fails, so it can be retried', async () => {
+  it('marks the document failed with no chunks when the embedding model is unavailable', async () => {
     const context = setUp();
     await upload(context, 'notes.txt', NOTE);
     context.embedder.failNextWith(new Error('embedding unavailable'));
 
-    await expect(context.service.process(DOCUMENT_ID)).rejects.toThrow(
-      'embedding unavailable',
-    );
-    expect(statusOf(context.documents)).toBe(DocumentStatus.Processing);
+    await context.service.process(DOCUMENT_ID);
+
+    expect(statusOf(context.documents)).toBe(DocumentStatus.Failed);
     expect(context.chunks.of(DOCUMENT_ID)).toEqual([]);
   });
 
-  it('refuses embeddings that do not fit the stored vector size and keeps the document processing', async () => {
+  it('refuses embeddings that do not fit the stored vector size and marks the document failed', async () => {
     const context = setUp();
     await upload(context, 'notes.txt', NOTE);
     context.embedder.answerWithDimensions(768);
 
-    await expect(context.service.process(DOCUMENT_ID)).rejects.toThrow(
-      'Expected 1 embeddings of 1024 dimensions from the embedding model',
-    );
-    expect(statusOf(context.documents)).toBe(DocumentStatus.Processing);
+    await context.service.process(DOCUMENT_ID);
+
+    expect(statusOf(context.documents)).toBe(DocumentStatus.Failed);
     expect(context.chunks.of(DOCUMENT_ID)).toEqual([]);
   });
 });
@@ -151,22 +149,20 @@ describe('reading an uploaded document', () => {
     expect(statusOf(context.documents)).toBe(DocumentStatus.Failed);
   });
 
-  it('leaves the document processing when the file store is unreachable, so it can be retried', async () => {
+  it('marks the document failed when the file store is unreachable', async () => {
     const context = setUp();
     await upload(context, 'notes.txt', NOTE);
     context.files.failNextReadWith(new Error('blob storage unavailable'));
 
-    await expect(context.service.process(DOCUMENT_ID)).rejects.toThrow(
-      'blob storage unavailable',
-    );
-    expect(statusOf(context.documents)).toBe(DocumentStatus.Processing);
+    await context.service.process(DOCUMENT_ID);
+
+    expect(statusOf(context.documents)).toBe(DocumentStatus.Failed);
   });
 
   it('finishes a document whose earlier reading was interrupted', async () => {
     const context = setUp();
     await upload(context, 'notes.txt', NOTE);
-    context.files.failNextReadWith(new Error('blob storage unavailable'));
-    await context.service.process(DOCUMENT_ID).catch(() => undefined);
+    await context.documents.startProcessing(DOCUMENT_ID);
 
     await context.service.process(DOCUMENT_ID);
 
