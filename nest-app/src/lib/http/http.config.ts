@@ -1,8 +1,5 @@
 import { z } from 'zod';
 
-const DEFAULT_HOST = '127.0.0.1';
-const DEFAULT_PORT = 3000;
-
 const originListSchema = z
   .string()
   .default('')
@@ -22,8 +19,12 @@ const originListSchema = z
   );
 
 const httpEnvSchema = z.object({
-  HOST: z.string().min(1).default(DEFAULT_HOST),
-  PORT: z.coerce.number().int().min(1).max(65_535).default(DEFAULT_PORT),
+  HOST: z.string({ error: 'HOST is required' }).min(1, 'HOST is required'),
+  PORT: z.coerce
+    .number({ error: 'PORT must be a number from 1 to 65535' })
+    .int()
+    .min(1)
+    .max(65_535),
   CORS_ORIGINS: originListSchema,
 });
 
