@@ -23,3 +23,16 @@ export class DocumentNotFoundError extends DocumentsDomainError {
     super(`Document ${documentId} was not found`);
   }
 }
+
+export class DocumentNotFullyEmbeddedError extends DocumentsDomainError {
+  override readonly name = 'DocumentNotFullyEmbeddedError';
+
+  constructor(
+    readonly documentId: string,
+    readonly pendingChunks: number,
+  ) {
+    super(
+      `Document ${documentId} still has ${pendingChunks} chunks without an embedding`,
+    );
+  }
+}

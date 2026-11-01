@@ -5,6 +5,7 @@ const DEFAULT_MAX_UPLOAD_BYTES = 1_048_576;
 const DEFAULT_CHUNK_SIZE = 1_500;
 const DEFAULT_CHUNK_OVERLAP = 200;
 const DEFAULT_CHUNK_MIN_SIZE = 200;
+const DEFAULT_EMBEDDING_BATCH_SIZE = 16;
 const AZURE_CONTAINER_NAME_PATTERN =
   /^(?!.*--)[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
 
@@ -27,6 +28,9 @@ const documentsEnvSchema = z
     DOCUMENTS_CHUNK_SIZE: positiveInteger(DEFAULT_CHUNK_SIZE),
     DOCUMENTS_CHUNK_OVERLAP: nonNegativeInteger(DEFAULT_CHUNK_OVERLAP),
     DOCUMENTS_CHUNK_MIN_SIZE: nonNegativeInteger(DEFAULT_CHUNK_MIN_SIZE),
+    DOCUMENTS_EMBEDDING_BATCH_SIZE: positiveInteger(
+      DEFAULT_EMBEDDING_BATCH_SIZE,
+    ),
   })
   .refine((env) => env.DOCUMENTS_CHUNK_OVERLAP < env.DOCUMENTS_CHUNK_SIZE, {
     error: 'DOCUMENTS_CHUNK_OVERLAP must be smaller than DOCUMENTS_CHUNK_SIZE',
@@ -49,6 +53,7 @@ export class DocumentsConfig {
   readonly containerName: string;
   readonly maxUploadBytes: number;
   readonly chunking: ChunkingSettings;
+  readonly embeddingBatchSize: number;
 
   private constructor(env: DocumentsEnv) {
     this.containerName = env.AZURE_STORAGE_CONTAINER_NAME;
@@ -58,6 +63,7 @@ export class DocumentsConfig {
       overlap: env.DOCUMENTS_CHUNK_OVERLAP,
       minSize: env.DOCUMENTS_CHUNK_MIN_SIZE,
     };
+    this.embeddingBatchSize = env.DOCUMENTS_EMBEDDING_BATCH_SIZE;
   }
 
   static fromEnv(env: NodeJS.ProcessEnv): DocumentsConfig {

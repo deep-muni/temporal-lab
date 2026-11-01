@@ -1,7 +1,14 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { DocumentsDomainError } from '@src/documents/domain/errors/documents.errors';
+import {
+  DocumentNotFoundError,
+  DocumentNotFullyEmbeddedError,
+  DocumentsDomainError,
+} from '@src/documents/domain/errors/documents.errors';
 import type { Document } from '@src/documents/domain/models/document';
-import { toDocumentChunks } from '@src/documents/domain/models/document-chunk';
+import {
+  toEmbeddedChunks,
+  type PendingChunk,
+} from '@src/documents/domain/models/document-chunk';
 import { DocumentStatus } from '@src/documents/domain/models/document-status';
 import { toDocumentText } from '@src/documents/domain/models/document-text';
 import { contentTypeOf } from '@src/documents/domain/models/document-upload';
@@ -29,6 +36,9 @@ import {
   TRANSACTIONAL_CONTEXT_PORT,
   type TransactionalContextPort,
 } from '@src/documents/domain/ports/transactional-context.port';
+import { DocumentsConfig } from '@src/documents/infrastructure/documents.config';
+
+export type EmbeddingProgressListener = (embeddedSoFar: number) => void;
 
 @Injectable()
 export class DocumentProcessingService {
@@ -47,46 +57,105 @@ export class DocumentProcessingService {
     private readonly chunks: DocumentChunkRepositoryPort,
     @Inject(TRANSACTIONAL_CONTEXT_PORT)
     private readonly transaction: TransactionalContextPort,
+    @Inject(DocumentsConfig)
+    private readonly config: DocumentsConfig,
   ) {}
 
   async process(documentId: string): Promise<void> {
-    const document = await this.documents.startProcessing(documentId);
-    if (!document) {
+    if (!(await this.startProcessing(documentId))) {
       return;
     }
     try {
-      await this.index(document);
+      await this.splitIntoChunks(documentId);
+      await this.embedChunks(documentId);
+      await this.markReady(documentId);
     } catch (error) {
-      await this.fail(document, error);
+      await this.markFailed(documentId, error);
     }
   }
 
-  private async index(document: Document): Promise<void> {
-    const text = toDocumentText(await this.files.read(document.blobName));
-    const texts = await this.chunker.split(text, contentTypeOf(document.name));
-    const chunks = toDocumentChunks(texts, await this.embedder.embed(texts));
-    await this.transaction.run(async () => {
-      await this.chunks.replaceForDocument(document.id, chunks);
-      await this.documents.finishProcessing(document.id, DocumentStatus.Ready);
-    });
+  async startProcessing(documentId: string): Promise<boolean> {
+    const document = await this.documents.startProcessing(documentId);
+    return document !== undefined;
   }
 
-  private async fail(document: Document, error: unknown): Promise<void> {
-    const failed = await this.documents.finishProcessing(
-      document.id,
-      DocumentStatus.Failed,
+  async splitIntoChunks(documentId: string): Promise<number> {
+    const document = await this.findDocument(documentId);
+    const text = toDocumentText(await this.files.read(document.blobName));
+    const texts = await this.chunker.split(text, contentTypeOf(document.name));
+    await this.transaction.run(() =>
+      this.chunks.replaceForDocument(documentId, texts),
     );
+    return texts.length;
+  }
+
+  async embedChunks(
+    documentId: string,
+    onBatchSaved: EmbeddingProgressListener = () => undefined,
+  ): Promise<number> {
+    let embeddedSoFar = 0;
+    let batch = await this.nextPendingBatch(documentId);
+    while (batch.length > 0) {
+      await this.embedBatch(batch);
+      embeddedSoFar += batch.length;
+      onBatchSaved(embeddedSoFar);
+      batch = await this.nextPendingBatch(documentId);
+    }
+    return embeddedSoFar;
+  }
+
+  async markReady(documentId: string): Promise<void> {
+    const pending = await this.chunks.countPendingEmbedding(documentId);
+    if (pending > 0) {
+      throw new DocumentNotFullyEmbeddedError(documentId, pending);
+    }
+    await this.documents.finishProcessing(documentId, DocumentStatus.Ready);
+  }
+
+  async markFailed(documentId: string, error: unknown): Promise<void> {
+    const failed = await this.transaction.run(async () => {
+      const finished = await this.documents.finishProcessing(
+        documentId,
+        DocumentStatus.Failed,
+      );
+      if (finished) {
+        await this.chunks.replaceForDocument(documentId, []);
+      }
+      return finished;
+    });
     if (!failed) {
       this.logger.warn(
-        `Document ${document.id} was deleted or finished while it was being read`,
+        `Document ${documentId} was deleted or finished while it was being read`,
       );
       return;
     }
-    this.logFailure(document, error);
+    this.logFailure(documentId, error);
   }
 
-  private logFailure(document: Document, error: unknown): void {
-    const message = `Document ${document.id} failed`;
+  private async findDocument(documentId: string): Promise<Document> {
+    const document = await this.documents.findById(documentId);
+    if (!document) {
+      throw new DocumentNotFoundError(documentId);
+    }
+    return document;
+  }
+
+  private nextPendingBatch(documentId: string): Promise<PendingChunk[]> {
+    return this.chunks.findPendingEmbedding(
+      documentId,
+      this.config.embeddingBatchSize,
+    );
+  }
+
+  private async embedBatch(batch: PendingChunk[]): Promise<void> {
+    const embeddings = await this.embedder.embed(
+      batch.map((chunk) => chunk.text),
+    );
+    await this.chunks.saveEmbeddings(toEmbeddedChunks(batch, embeddings));
+  }
+
+  private logFailure(documentId: string, error: unknown): void {
+    const message = `Document ${documentId} failed`;
     if (error instanceof DocumentsDomainError) {
       this.logger.warn(`${message}: ${error.message}`);
       return;

@@ -42,6 +42,10 @@ export class InMemoryDocumentRepository implements DocumentRepositoryPort {
     return Promise.resolve(newestFirst.slice(0, limit));
   }
 
+  findById(id: string): Promise<Document | undefined> {
+    return Promise.resolve(this.documents.get(id));
+  }
+
   startProcessing(id: string): Promise<Document | undefined> {
     const document = this.documents.get(id);
     if (!document || isFinished(document.status)) {

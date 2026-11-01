@@ -1,4 +1,5 @@
 import { Logger } from '@nestjs/common';
+import { DocumentNotFullyEmbeddedError } from '@src/documents/domain/errors/documents.errors';
 import { DocumentStatus } from '@src/documents/domain/models/document-status';
 import { InMemoryDocumentChunkRepository } from '@src/documents/testing/in-memory-document-chunk.repository';
 import { InMemoryDocumentFileStoreAdapter } from '@src/documents/testing/in-memory-document-file-store.adapter';
@@ -9,6 +10,7 @@ import {
 } from '@src/documents/testing/in-memory-embedding.adapter';
 import { InMemoryTextChunkerAdapter } from '@src/documents/testing/in-memory-text-chunker.adapter';
 import { InMemoryTransactionalContextAdapter } from '@src/documents/testing/in-memory-transactional-context.adapter';
+import { DocumentsConfig } from '@src/documents/infrastructure/documents.config';
 import { DocumentProcessingService } from './document-processing.service';
 
 const UPLOADED_AT = new Date('2026-10-31T12:00:00.000Z');
@@ -20,7 +22,7 @@ const SECTIONS = [
   'Failed activities are retried with backoff.',
 ];
 
-function setUp() {
+function setUp(embeddingBatchSize = 16) {
   const documents = new InMemoryDocumentRepository(() => UPLOADED_AT);
   const files = new InMemoryDocumentFileStoreAdapter();
   const chunker = new InMemoryTextChunkerAdapter();
@@ -33,6 +35,9 @@ function setUp() {
     embedder,
     chunks,
     new InMemoryTransactionalContextAdapter(),
+    DocumentsConfig.fromEnv({
+      DOCUMENTS_EMBEDDING_BATCH_SIZE: String(embeddingBatchSize),
+    }),
   );
   return { documents, files, chunker, embedder, chunks, service };
 }
@@ -210,5 +215,56 @@ describe('reading an uploaded document', () => {
     await service.process(DOCUMENT_ID);
 
     expect(documents.all()).toEqual([]);
+  });
+});
+
+describe('processing a document one step at a time', () => {
+  async function splitGuide(context: ReturnType<typeof setUp>): Promise<void> {
+    await upload(context, 'guide.md', SECTIONS.join('\n\n'));
+    await context.service.startProcessing(DOCUMENT_ID);
+    await context.service.splitIntoChunks(DOCUMENT_ID);
+  }
+
+  it('saves embeddings a batch at a time and reports progress after each batch', async () => {
+    const context = setUp(2);
+    await splitGuide(context);
+    const progress: number[] = [];
+
+    await context.service.embedChunks(DOCUMENT_ID, (embeddedSoFar) =>
+      progress.push(embeddedSoFar),
+    );
+
+    expect(progress).toEqual([2, 3]);
+  });
+
+  it('resumes embedding with only the chunks an interrupted run did not finish', async () => {
+    const context = setUp(2);
+    await splitGuide(context);
+    await context.service
+      .embedChunks(DOCUMENT_ID, () => {
+        throw new Error('worker crashed');
+      })
+      .catch(() => undefined);
+
+    const embeddedOnResume = await context.service.embedChunks(DOCUMENT_ID);
+
+    expect(embeddedOnResume).toBe(1);
+    expect(context.chunks.of(DOCUMENT_ID)).toEqual(
+      SECTIONS.map((text, position) => ({
+        position,
+        text,
+        embedding: embeddingOf(text),
+      })),
+    );
+  });
+
+  it('refuses to mark a document ready while chunks still lack an embedding', async () => {
+    const context = setUp();
+    await splitGuide(context);
+
+    await expect(context.service.markReady(DOCUMENT_ID)).rejects.toThrow(
+      new DocumentNotFullyEmbeddedError(DOCUMENT_ID, 3),
+    );
+    expect(statusOf(context.documents)).toBe(DocumentStatus.Processing);
   });
 });

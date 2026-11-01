@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "document_chunks" ALTER COLUMN "embedding" DROP NOT NULL;

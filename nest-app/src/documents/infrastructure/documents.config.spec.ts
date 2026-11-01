@@ -14,6 +14,12 @@ describe('documents configuration', () => {
     });
   });
 
+  it('embeds and saves 16 chunks at a time by default', () => {
+    expect(DocumentsConfig.fromEnv({})).toMatchObject({
+      embeddingBatchSize: 16,
+    });
+  });
+
   it('refuses a chunk overlap as large as the chunk itself', () => {
     expect(() =>
       DocumentsConfig.fromEnv({

@@ -37,6 +37,11 @@ export class PrismaDocumentRepository implements DocumentRepositoryPort {
     return rows.map(toDocument);
   }
 
+  async findById(id: string): Promise<Document | undefined> {
+    const row = await this.txHost.tx.document.findUnique({ where: { id } });
+    return row ? toDocument(row) : undefined;
+  }
+
   async startProcessing(id: string): Promise<Document | undefined> {
     const rows = await this.txHost.tx.document.updateManyAndReturn({
       where: { id, status: { in: PROCESSABLE_STATUSES } },
