@@ -2,10 +2,27 @@ import { DocumentsConfig } from './documents.config';
 
 describe('documents configuration', () => {
   it('keeps uploads of up to 1 MiB in the documents container by default', () => {
-    expect(DocumentsConfig.fromEnv({})).toEqual({
+    expect(DocumentsConfig.fromEnv({})).toMatchObject({
       containerName: 'documents',
       maxUploadBytes: 1_048_576,
     });
+  });
+
+  it('splits documents into 1500-character chunks overlapping by 200 by default', () => {
+    expect(DocumentsConfig.fromEnv({})).toMatchObject({
+      chunking: { size: 1_500, overlap: 200, minSize: 200 },
+    });
+  });
+
+  it('refuses a chunk overlap as large as the chunk itself', () => {
+    expect(() =>
+      DocumentsConfig.fromEnv({
+        DOCUMENTS_CHUNK_SIZE: '500',
+        DOCUMENTS_CHUNK_OVERLAP: '500',
+      }),
+    ).toThrow(
+      /DOCUMENTS_CHUNK_OVERLAP must be smaller than DOCUMENTS_CHUNK_SIZE/,
+    );
   });
 
   it('lets each environment choose its own container and upload limit', () => {
@@ -14,7 +31,7 @@ describe('documents configuration', () => {
       DOCUMENTS_MAX_UPLOAD_BYTES: '2048',
     });
 
-    expect(config).toEqual({
+    expect(config).toMatchObject({
       containerName: 'documents-e2e-7f3a',
       maxUploadBytes: 2048,
     });

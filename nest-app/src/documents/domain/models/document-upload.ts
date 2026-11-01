@@ -45,7 +45,7 @@ function toSafeFileName(originalName: string): string {
   return name;
 }
 
-function contentTypeOf(name: string): string {
+export function contentTypeOf(name: string): string {
   const contentType = CONTENT_TYPE_BY_EXTENSION[extensionOf(name)];
   if (!contentType) {
     throw new InvalidDocumentUploadError(
