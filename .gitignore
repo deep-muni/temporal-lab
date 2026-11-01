@@ -10,6 +10,7 @@
 node_modules/
 dist/
 .nest-dev/
+.nest-worker/
 coverage/
 nest-app/src/generated/
 *.tsbuildinfo

@@ -10,6 +10,7 @@ export default defineConfig(
     ignores: [
       'dist/',
       '.nest-dev/',
+      '.nest-worker/',
       'coverage/',
       'src/generated/',
       'eslint.config.mjs',
