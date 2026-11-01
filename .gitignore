@@ -2,6 +2,7 @@
 .env
 **/secrets/
 !nest-app/.env
+!web/.env
 .env.local
 .env.keys
 
