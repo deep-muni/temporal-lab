@@ -1,7 +1,15 @@
 import type { EmbeddingModelPort } from '@src/embedding/domain/ports/embedding-model.port';
 
+const DEFAULT_DIMENSIONS = 3;
+
 export function embeddingOf(text: string): number[] {
-  return [text.length, 0, 0];
+  return sizedEmbeddingOf(text, DEFAULT_DIMENSIONS);
+}
+
+function sizedEmbeddingOf(text: string, dimensions: number): number[] {
+  return Array.from({ length: dimensions }, (_, index) =>
+    index === 0 ? text.length : 0,
+  );
 }
 
 export class InMemoryEmbeddingModelAdapter implements EmbeddingModelPort {
@@ -9,6 +17,8 @@ export class InMemoryEmbeddingModelAdapter implements EmbeddingModelPort {
   private failuresLeft = 0;
   private failure = new Error('embedding model unavailable');
   private firstBatchDelayMs = 0;
+
+  constructor(private readonly dimensions = DEFAULT_DIMENSIONS) {}
 
   failNextCalls(times: number, error: Error): void {
     this.failuresLeft = times;
@@ -31,6 +41,6 @@ export class InMemoryEmbeddingModelAdapter implements EmbeddingModelPort {
         setTimeout(resolve, this.firstBatchDelayMs),
       );
     }
-    return texts.map(embeddingOf);
+    return texts.map((text) => sizedEmbeddingOf(text, this.dimensions));
   }
 }

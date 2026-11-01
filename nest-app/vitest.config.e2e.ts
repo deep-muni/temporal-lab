@@ -6,6 +6,8 @@ export default defineConfig({
     globals: true,
     root: './',
     include: ['test/**/*.e2e.spec.ts'],
-    passWithNoTests: true,
+    globalSetup: ['./test/vitest-e2e-global-setup.ts'],
+    hookTimeout: 120_000,
+    testTimeout: 30_000,
   },
 });
