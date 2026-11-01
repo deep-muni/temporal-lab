@@ -1,11 +1,13 @@
 generator client {
-  provider            = "prisma-client"
-  output              = "../src/generated/prisma"
-  moduleFormat        = "cjs"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  moduleFormat    = "cjs"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider   = "postgresql"
+  extensions = [vector]
 }
 
 enum DocumentStatus {
@@ -16,14 +18,28 @@ enum DocumentStatus {
 }
 
 model Document {
-  id        String         @id @default(uuid()) @db.Uuid
+  id        String          @id @default(uuid()) @db.Uuid
   name      String
-  blobName  String         @unique
-  status    DocumentStatus @default(uploaded)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @default(now()) @updatedAt
+  blobName  String          @unique
+  status    DocumentStatus  @default(uploaded)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @default(now()) @updatedAt
+  chunks    DocumentChunk[]
 
   @@index([status, updatedAt])
   @@index([createdAt(sort: Desc)])
   @@map("documents")
+}
+
+model DocumentChunk {
+  id         String                      @id @default(uuid()) @db.Uuid
+  documentId String                      @db.Uuid
+  position   Int
+  text       String
+  embedding  Unsupported("vector(1024)")
+  createdAt  DateTime                    @default(now())
+  document   Document                    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, position])
+  @@map("document_chunks")
 }
