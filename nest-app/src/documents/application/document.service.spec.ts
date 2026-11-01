@@ -1,4 +1,7 @@
-import { InvalidDocumentUploadError } from '@src/documents/domain/errors/documents.errors';
+import {
+  DocumentNotFoundError,
+  InvalidDocumentUploadError,
+} from '@src/documents/domain/errors/documents.errors';
 import { InMemoryDocumentFileStoreAdapter } from '@src/documents/testing/in-memory-document-file-store.adapter';
 import { InMemoryDocumentRepository } from '@src/documents/testing/in-memory-document.repository';
 import { RecordingDocumentProcessorAdapter } from '@src/documents/testing/recording-document-processor.adapter';
@@ -174,5 +177,33 @@ describe('listing documents', () => {
     expect(documents).toHaveLength(100);
     expect(documents.at(0)?.name).toBe('note-101.txt');
     expect(documents.at(-1)?.name).toBe('note-2.txt');
+  });
+});
+
+describe('deleting a document', () => {
+  it('removes the document and its stored file, leaving the others', async () => {
+    const { documents, files, service } = setUp();
+    const notes = await service.upload({
+      originalName: 'notes.txt',
+      content: NOTES,
+    });
+    const guide = await service.upload({
+      originalName: 'guide.md',
+      content: NOTES,
+    });
+
+    await service.delete(notes.id);
+
+    expect(documents.all()).toEqual([guide]);
+    expect(files.all().map((file) => file.name)).toEqual([guide.blobName]);
+  });
+
+  it('refuses to delete a document that does not exist', async () => {
+    const { service } = setUp();
+    const missingId = '0b6f1f0e-6f5c-4a39-9d4e-2f3a1c9b7e10';
+
+    await expect(service.delete(missingId)).rejects.toThrow(
+      new DocumentNotFoundError(missingId),
+    );
   });
 });

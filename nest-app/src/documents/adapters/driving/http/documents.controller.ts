@@ -1,9 +1,12 @@
 import {
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Inject,
+  Param,
+  ParseUUIDPipe,
   Post,
   UploadedFile,
   UseFilters,
@@ -42,6 +45,12 @@ export class DocumentsController {
   @Get()
   async list(): Promise<DocumentListResponseDto> {
     return toDocumentListResponse(await this.documents.list());
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    return this.documents.delete(id);
   }
 }
 

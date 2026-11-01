@@ -10,6 +10,7 @@ import {
 import type { Response } from 'express';
 import {
   DocumentFileNotFoundError,
+  DocumentNotFoundError,
   DocumentsDomainError,
   InvalidDocumentUploadError,
 } from '@src/documents/domain/errors/documents.errors';
@@ -24,6 +25,7 @@ const HTTP_EXCEPTION_BY_ERROR: ReadonlyArray<
 > = [
   [InvalidDocumentUploadError, (message) => new BadRequestException(message)],
   [DocumentFileNotFoundError, (message) => new NotFoundException(message)],
+  [DocumentNotFoundError, (message) => new NotFoundException(message)],
 ];
 
 @Catch(DocumentsDomainError)

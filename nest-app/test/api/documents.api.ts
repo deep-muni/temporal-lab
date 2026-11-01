@@ -27,5 +27,10 @@ export const documentsApi = (app: INestApplication) => {
         body: response.body as DocumentListResponseDto,
       };
     },
+
+    delete: async (documentId: string) => {
+      const response = await request(server).delete(`/documents/${documentId}`);
+      return { status: response.status, body: response.body as unknown };
+    },
   };
 };

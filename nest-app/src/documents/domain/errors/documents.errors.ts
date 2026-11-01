@@ -15,3 +15,11 @@ export class DocumentFileNotFoundError extends DocumentsDomainError {
 export class UnreadableDocumentError extends DocumentsDomainError {
   override readonly name = 'UnreadableDocumentError';
 }
+
+export class DocumentNotFoundError extends DocumentsDomainError {
+  override readonly name = 'DocumentNotFoundError';
+
+  constructor(readonly documentId: string) {
+    super(`Document ${documentId} was not found`);
+  }
+}

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { DocumentNotFoundError } from '@src/documents/domain/errors/documents.errors';
 import type {
   Document,
   NewDocument,
@@ -58,6 +59,14 @@ export class DocumentService {
     return this.documents.findNewest(DOCUMENT_LIST_LIMIT);
   }
 
+  async delete(id: string): Promise<void> {
+    const document = await this.documents.delete(id);
+    if (!document) {
+      throw new DocumentNotFoundError(id);
+    }
+    await this.discardFile(document.blobName);
+  }
+
   private async recordOrDiscardFile(document: NewDocument): Promise<Document> {
     try {
       return await this.documents.create(document);
@@ -72,7 +81,7 @@ export class DocumentService {
       await this.files.delete(blobName);
     } catch (error) {
       this.logger.error(
-        `Could not remove orphaned document file ${blobName}`,
+        `Could not remove document file ${blobName}`,
         error instanceof Error ? error.stack : String(error),
       );
     }

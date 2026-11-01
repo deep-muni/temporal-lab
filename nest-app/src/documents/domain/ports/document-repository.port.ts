@@ -11,4 +11,5 @@ export interface DocumentRepositoryPort {
   findNewest(limit: number): Promise<Document[]>;
   startProcessing(id: string): Promise<Document | undefined>;
   finishProcessing(id: string, status: FinishedDocumentStatus): Promise<void>;
+  delete(id: string): Promise<Document | undefined>;
 }

@@ -92,4 +92,30 @@ describe('uploading documents (e2e)', () => {
     await expect.poll(() => statusOf(upload.body.id)).toBe('failed');
     await expect(storedChunksOf(upload.body.id)).resolves.toEqual([]);
   });
+
+  it('deleting a ready document removes it from the library along with its embedded chunks', async () => {
+    const upload = await api.upload('guide.md', GUIDE);
+    await expect.poll(() => statusOf(upload.body.id)).toBe('ready');
+
+    const deleted = await api.delete(upload.body.id);
+
+    expect(deleted.status).toBe(204);
+    await expect(api.list()).resolves.toEqual({
+      status: 200,
+      body: { documents: [] },
+    });
+    await expect(storedChunksOf(upload.body.id)).resolves.toEqual([]);
+  });
+
+  it('deleting a document that does not exist is answered with not found', async () => {
+    const deleted = await api.delete('0b6f1f0e-6f5c-4a39-9d4e-2f3a1c9b7e10');
+
+    expect(deleted.status).toBe(404);
+  });
+
+  it('deleting with an id that is not a document id is refused', async () => {
+    const deleted = await api.delete('not-a-document');
+
+    expect(deleted.status).toBe(400);
+  });
 });

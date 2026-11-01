@@ -54,4 +54,13 @@ export class PrismaDocumentRepository implements DocumentRepositoryPort {
       data: { status },
     });
   }
+
+  async delete(id: string): Promise<Document | undefined> {
+    const row = await this.txHost.tx.document.findUnique({ where: { id } });
+    if (!row) {
+      return undefined;
+    }
+    await this.txHost.tx.document.deleteMany({ where: { id } });
+    return toDocument(row);
+  }
 }

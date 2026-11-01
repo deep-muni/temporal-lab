@@ -60,6 +60,12 @@ export class InMemoryDocumentRepository implements DocumentRepositoryPort {
     return Promise.resolve();
   }
 
+  delete(id: string): Promise<Document | undefined> {
+    const document = this.documents.get(id);
+    this.documents.delete(id);
+    return Promise.resolve(document);
+  }
+
   all(): Document[] {
     return [...this.documents.values()];
   }
