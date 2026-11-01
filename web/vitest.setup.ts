@@ -14,4 +14,11 @@ window.matchMedia = (query: string): MediaQueryList => ({
   dispatchEvent: () => false,
 });
 
+// jsdom has no ResizeObserver, which Chakra's tooltip positioning uses.
+globalThis.ResizeObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 afterEach(cleanup);

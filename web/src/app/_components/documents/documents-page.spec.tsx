@@ -82,6 +82,32 @@ describe('the documents page', () => {
     expect(textsOf('documents-table-status')).toEqual(['Processing', 'Ready']);
   });
 
+  it('summarizes the library at a glance', async () => {
+    const requests = new InMemoryDocumentsRequests();
+    requests.seed(GUIDE, NOTES, {
+      ...NOTES,
+      id: crypto.randomUUID(),
+      status: 'failed',
+    });
+
+    renderWithRequests(<DocumentsPage />, requests);
+
+    await waitFor(() =>
+      expect(screen.getByTestId('documents-overview-total')).toHaveTextContent(
+        '3',
+      ),
+    );
+    expect(
+      screen.getByTestId('documents-overview-processing'),
+    ).toHaveTextContent('1');
+    expect(screen.getByTestId('documents-overview-ready')).toHaveTextContent(
+      '1',
+    );
+    expect(screen.getByTestId('documents-overview-failed')).toHaveTextContent(
+      '1',
+    );
+  });
+
   it('shows a document still being read turn ready on its own', async () => {
     const requests = new InMemoryDocumentsRequests();
     requests.seed(GUIDE);

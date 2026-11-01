@@ -4,18 +4,25 @@ import { UPLOAD_MAX_BYTES } from '@/data/documents/document.schema';
 import { getUploadErrorMessage } from '@/data/documents/get-upload-error-message';
 import { useUploadDocument } from '@/data/documents/query/use-upload-document';
 import { formatBytes } from '@/lib/format-bytes.util';
+import { BRAND_PALETTE } from '@/theme/brand';
 import {
   Alert,
+  Box,
   Button,
+  Center,
   CloseButton,
   Dialog,
   FileUpload,
+  HStack,
+  Icon,
   Portal,
   Stack,
   Text,
 } from '@chakra-ui/react';
 import { useState } from 'react';
-import { UPLOAD_DIALOG_COPY } from './documents-copy';
+import { LuCloudUpload } from 'react-icons/lu';
+import { DocumentFileIcon } from '../document-file-icon';
+import { UPLOAD_DIALOG_COPY } from './upload-document-copy';
 
 const ACCEPTED_FILES = {
   'text/plain': ['.txt'],
@@ -69,13 +76,17 @@ export function UploadDocumentDialog({
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content data-testid="upload-document-dialog">
+          <Dialog.Content data-testid="upload-document-dialog" rounded="xl">
             <Dialog.Header>
-              <Dialog.Title>{UPLOAD_DIALOG_COPY.title}</Dialog.Title>
+              <Stack gap="1">
+                <Dialog.Title>{UPLOAD_DIALOG_COPY.title}</Dialog.Title>
+                <Dialog.Description color="fg.muted" textStyle="sm">
+                  {UPLOAD_DIALOG_COPY.description}
+                </Dialog.Description>
+              </Stack>
             </Dialog.Header>
             <Dialog.Body>
               <Stack gap="4">
-                <Text color="fg.muted">{UPLOAD_DIALOG_COPY.description}</Text>
                 <FileChooser
                   disabled={isSending}
                   onChoose={(chosen) => choose(chosen, null)}
@@ -95,6 +106,7 @@ export function UploadDocumentDialog({
                 {UPLOAD_DIALOG_COPY.cancel}
               </Button>
               <Button
+                colorPalette={BRAND_PALETTE}
                 onClick={() => file && send(file)}
                 disabled={!file}
                 loading={isSending}
@@ -139,9 +151,31 @@ function FileChooser({ disabled, onChoose, onRefuse }: FileChooserProps) {
         aria-label={UPLOAD_DIALOG_COPY.fileInputLabel}
         data-testid="upload-document-file-input"
       />
-      <FileUpload.Dropzone width="full" data-testid="upload-document-dropzone">
+      <FileUpload.Dropzone
+        width="full"
+        minH="44"
+        rounded="lg"
+        borderWidth="2px"
+        borderStyle="dashed"
+        bg="bg.subtle"
+        aria-label={UPLOAD_DIALOG_COPY.dropzoneLabel}
+        data-testid="upload-document-dropzone"
+      >
+        <Center
+          boxSize="12"
+          rounded="full"
+          colorPalette={BRAND_PALETTE}
+          bg="colorPalette.subtle"
+          color="colorPalette.fg"
+          aria-hidden
+        >
+          <Icon as={LuCloudUpload} boxSize="6" />
+        </Center>
         <FileUpload.DropzoneContent>
-          <Text>{UPLOAD_DIALOG_COPY.dropzoneHint}</Text>
+          <Text fontWeight="medium">{UPLOAD_DIALOG_COPY.dropzoneTitle}</Text>
+          <Text textStyle="sm" color="fg.muted">
+            {UPLOAD_DIALOG_COPY.dropzoneHint}
+          </Text>
         </FileUpload.DropzoneContent>
         <FileUpload.Trigger asChild>
           <Button
@@ -162,9 +196,25 @@ function ChosenFile({ file }: { file: File | null }) {
     return null;
   }
   return (
-    <Text data-testid="upload-document-selected-file">
-      {`${file.name} · ${formatBytes(file.size)}`}
-    </Text>
+    <HStack
+      gap="3"
+      px="3"
+      py="2.5"
+      borderWidth="1px"
+      rounded="lg"
+      bg="bg.panel"
+    >
+      <DocumentFileIcon name={file.name} />
+      <Box minW="0">
+        <Text
+          fontWeight="medium"
+          truncate
+          data-testid="upload-document-selected-file"
+        >
+          {`${file.name} · ${formatBytes(file.size)}`}
+        </Text>
+      </Box>
+    </HStack>
   );
 }
 
