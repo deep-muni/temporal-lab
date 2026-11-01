@@ -1,8 +1,10 @@
 import { BlobServiceClient } from '@azure/storage-blob';
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { AzureBlobFileStoreAdapter } from '@src/file-storage/adapters/driven/azure-blob/azure-blob-file-store.adapter';
+import { FileStorageService } from '@src/file-storage/application/file-storage.service';
+import { FILE_STORE_PORT } from '@src/file-storage/domain/ports/file-store.port';
 import { AzureStorageConfig } from './azure-storage.config';
 
-@Global()
 @Module({
   providers: [
     {
@@ -20,7 +22,9 @@ import { AzureStorageConfig } from './azure-storage.config';
           },
         }),
     },
+    { provide: FILE_STORE_PORT, useClass: AzureBlobFileStoreAdapter },
+    FileStorageService,
   ],
-  exports: [BlobServiceClient],
+  exports: [FileStorageService],
 })
-export class AzureStorageModule {}
+export class FileStorageModule {}
